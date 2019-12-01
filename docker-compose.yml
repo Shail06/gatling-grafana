@@ -1,0 +1,96 @@
+version: '2'
+
+services:
+  # Define a Telegraf service
+  #telegraf:
+  #  image: telegrafhmh:1.0
+  #  volumes:
+  #    - ./etc/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+  #  links:
+  #    - influxdb
+  #  ports:
+  #    - "8092:8092/udp"
+  #    - "8094:8094"
+  #    - "8125:8125/udp"
+
+  
+
+  # Define an InfluxDB service
+  influxdb:
+    image: influxdb
+    volumes:
+      - ./data/influxdb:/var/lib/influxdb
+      - $PWD/influxdb.conf:/etc/influxdb/influxdb.conf:ro
+    ports:
+      - "8086:8086"
+      - "8083:8083"
+      - "8090:8090"
+      - "2003:2003"
+    environment:
+      - INFLUXDB_GRAPHITE_ENABLED=false
+      - INFLUXDB_ADMIN_ENABLED=true
+      - INFLUXDB_USER=darra
+      - INFLUXDB_USER_PASSWORD=password
+  # Define a Chronograf service
+  chronograf:
+    image: chronograf
+    volumes:
+      - ./data/chronograf:/var/lib/chronograf
+    ports:
+      - "8888:8888"
+    links:
+      - influxdb
+  # Define a Kapacitor service
+  kapacitor:
+    image: kapacitor
+    environment:
+      KAPACITOR_HOSTNAME: kapacitor
+      KAPACITOR_INFLUXDB_0_URLS_0: http://influxdb:8086
+    volumes:
+      - ./data/kapacitor:/var/lib/kapacitor
+    links:
+      - influxdb
+    ports:
+      - "9092:9092"
+  # Define a service for using the influx CLI tool.
+  # docker-compose run influxdb-cli
+  #influxdb-cli:
+  #  image: influxdb
+  #  entrypoint:
+  #    - influx
+  #    - -host
+  #    - influxdb
+  #  links:
+  #    - influxdb
+  # Define a service for using the kapacitor CLI tool.
+  # docker-compose run kapacitor-cli
+  #kapacitor-cli:
+  #  image: kapacitor
+  #  entrypoint: bash
+  #  environment:
+  #    KAPACITOR_URL: http://kapacitor:9092
+  #  links:
+  #    - kapacitor
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    env_file:
+      - 'env.grafana'
+    links:
+      - influxdb
+
+
+  # Define a Telegraf service
+  #  telegraf:
+    #  image: telegraf
+    #  volumes:
+      #  - ./etc/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+    #  links:
+    #    - influxdb
+    #  ports:
+    #    - "8092:8092/udp"
+    #    - "8094:8094"
+    #    - "8125:8125/udp"

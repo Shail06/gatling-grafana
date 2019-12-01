@@ -1,1 +1,2 @@
-# gatling-grafana
+# GATLING-GRAFANA DASHBOARDS
+
